@@ -1,2 +1,7 @@
 data/
-notebooks/Clean_Catboost/catboost_info/
+**/catboost_info/
+
+
+
+
+
