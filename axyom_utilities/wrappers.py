@@ -152,3 +152,62 @@ class CatBoostRegressorWrapper(BaseEstimator, RegressorMixin):
         """
         self.params.update(parameters)
         return self
+      
+from lightgbm import LGBMRegressor
+from lightgbm import early_stopping
+
+class LGBMRegressorWrapper(BaseEstimator, RegressorMixin):
+    def __init__(self, **kwargs):
+        self.params = kwargs
+
+    def fit(self, X, y, eval_set=None, early_stopping_rounds=None, verbose=False):
+        """
+        Train the LGBMRegressor model.
+
+        Parameters:
+        - X: pd.DataFrame or array-like
+          Training features.
+        - y: array-like
+          Training labels.
+        - eval_set: tuple or None
+          Optional validation set for early stopping, in the form (X_val, y_val).
+        - early_stopping_rounds: int or None
+          Number of rounds for early stopping. Set to None to disable.
+        - verbose: bool
+          Whether to print training progress.
+        """
+        # Ensure X is a DataFrame
+        if not isinstance(X, pd.DataFrame):
+            X = pd.DataFrame(X)
+
+        # Initialize and train the LGBM Regressor
+        self.lgbm_model_ = LGBMRegressor(**self.params)
+
+        # Prepare callbacks for early stopping and logging
+        callbacks = []
+        if early_stopping_rounds:
+            callbacks.append(early_stopping(early_stopping_rounds))
+        # if verbose:
+        #     callbacks.append(log_evaluation(period=1))
+        
+        self.lgbm_model_.fit(
+            X,
+            y,
+            eval_set=eval_set,
+            callbacks=callbacks
+        )
+        
+        return self
+
+    def predict(self, X):
+        return self.lgbm_model_.predict(X)
+
+    def get_best_iteration(self):
+        return self.lgbm_model_.best_iteration_ if hasattr(self.lgbm_model_, "best_iteration_") else None
+
+    def get_params(self, deep=True):
+        return self.params
+    
+    def set_params(self, **parameters):
+        self.params.update(parameters)
+        return self
