@@ -1,7 +1,7 @@
 from xgboost import XGBRegressor
 from sklearn.base import BaseEstimator, RegressorMixin
 import pandas as pd
-from xgboost.callback import EarlyStopping
+from catboost import CatBoostRegressor, Pool
 
 class XGBRegressorWrapper(BaseEstimator, RegressorMixin):
     def __init__(self, **kwargs):
@@ -62,5 +62,93 @@ class XGBRegressorWrapper(BaseEstimator, RegressorMixin):
         return self.params
     
     def set_params(self, **parameters):
+        self.params.update(parameters)
+        return self
+
+class CatBoostRegressorWrapper(BaseEstimator, RegressorMixin):
+    def __init__(self, **kwargs):
+        """
+        Parameters:
+        - kwargs: Additional parameters for CatBoostRegressor.
+        """
+        self.params = kwargs
+
+    def fit(self, X, y, eval_set=None, early_stopping_rounds=None, verbose=False):
+        """
+        Train the CatBoostRegressor model.
+
+        Parameters:
+        - X: pd.DataFrame
+          Training features.
+        - y: array-like
+          Training labels.
+        - eval_set: tuple or None
+          Optional validation set for early stopping, in the form (X_val, y_val).
+        - early_stopping_rounds: int or None
+          Number of rounds for early stopping. Set to None to disable.
+        - verbose: bool
+          Whether to print training progress.
+        """
+        # Ensure X is a DataFrame
+        if not isinstance(X, pd.DataFrame):
+            X = pd.DataFrame(X)
+        
+        # Identify categorical columns
+        categorical_columns = X.select_dtypes(include=['object', 'category']).columns
+        categorical_indices = [X.columns.get_loc(col) for col in categorical_columns]
+
+        # Create CatBoost Pool with categorical features
+        training_pool = Pool(X, y, cat_features=categorical_indices)
+        eval_pool = None
+        if eval_set is not None:
+            X_val, y_val = eval_set
+            eval_pool = Pool(X_val, y_val, cat_features=categorical_indices)
+
+        # Initialize and train the CatBoost Regressor
+        self.catboost_model_ = CatBoostRegressor(**self.params)
+        self.catboost_model_.fit(
+            training_pool,
+            eval_set=eval_pool,
+            early_stopping_rounds=early_stopping_rounds
+        )
+        
+        return self
+
+    def predict(self, X):
+        """
+        Make predictions using the trained model.
+
+        Parameters:
+        - X: pd.DataFrame or array-like
+          Features to predict on.
+
+        Returns:
+        - array-like: Predicted values.
+        """
+        return self.catboost_model_.predict(X)
+
+    def get_best_iteration(self):
+        return self.catboost_model_.get_best_iteration()
+
+    def get_params(self, deep=True):
+        """
+        Get parameters of the CatBoost model.
+
+        Returns:
+        - dict: Model parameters.
+        """
+        return self.params
+    
+    def set_params(self, **parameters):
+        """
+        Set parameters for the CatBoost model.
+
+        Parameters:
+        - parameters: dict
+          Parameters to update.
+
+        Returns:
+        - self
+        """
         self.params.update(parameters)
         return self
