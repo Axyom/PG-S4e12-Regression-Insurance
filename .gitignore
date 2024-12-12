@@ -3,6 +3,7 @@ data/
 **/oof_preds
 **/test_preds
 **/AutogluonModels/
-**/**models.pkl
+*.pkl
+
 
 
