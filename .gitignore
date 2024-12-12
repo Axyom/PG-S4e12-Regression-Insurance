@@ -1,7 +1,7 @@
 data/
 **/catboost_info/
-
-
+**/oof_preds
+**/test_preds
 
 
 
