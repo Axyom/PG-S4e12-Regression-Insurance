@@ -4,6 +4,6 @@ data/
 **/test_preds
 **/AutogluonModels/
 *.pkl
-
+*.csv
 
 
