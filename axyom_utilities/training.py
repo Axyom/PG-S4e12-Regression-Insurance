@@ -1,8 +1,9 @@
 from sklearn.model_selection import KFold
 from sklearn.metrics import root_mean_squared_error
 import numpy as np
+import pandas as pd
 
-def train_model_cv(model, X_train, y_train, X_test, X_orig, cv_splits=7, early_stopping_rounds=None):
+def train_model_cv(model, X_train, y_train, X_test, X_orig, y_orig=None, cv_splits=7, early_stopping_rounds=None):
     # Initialize the K-Fold for CV
     kf = KFold(n_splits=cv_splits, shuffle=True, random_state=84)
     
