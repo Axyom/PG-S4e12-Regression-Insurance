@@ -1,7 +1,11 @@
 import numpy as np
 import pandas as pd
 
-
+def health_score_eng(df):
+    df['HealthScore'] = df['Health Score'].apply(lambda x: int(x) if pd.notna(x) else x)
+    df['Health Score'] = df['Health Score'].fillna('None').astype('string')
+    
+    return df
 
 def preprocess(df_in):
     df = df_in.copy()
