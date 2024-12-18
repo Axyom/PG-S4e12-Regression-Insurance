@@ -1,16 +1,27 @@
 import numpy as np
 import pandas as pd
 
+
+
 def preprocess(df_in):
     df = df_in.copy()
 
+    df = clean_categorical(df)
+    df = preprocess_dates(df)
+    
+    return df
+
+def clean_categorical(df):
     categorical_features = df.select_dtypes(include=['object', 'category']).columns
     
     df[categorical_features] = df[categorical_features].fillna("Unknown")
 
     for col in categorical_features:
-        df[col] = df[col].astype('category')
+        df[col] = df[col].astype('category')   
     
+    return df 
+
+def preprocess_dates(df):
     df["Policy Start Date"] = pd.to_datetime(df["Policy Start Date"])
     df["Month"]       = df["Policy Start Date"].dt.month
     df["Day"]         = df["Policy Start Date"].dt.day
@@ -27,6 +38,5 @@ def preprocess(df_in):
     )
 
     df = df.drop("Policy Start Date", axis=1, errors = "ignore")
-    
 
-    return df
+    return df    

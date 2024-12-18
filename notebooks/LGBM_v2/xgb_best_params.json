@@ -1,0 +1,16 @@
+{
+    "n_estimators": 2864,
+    "objective": "regression",
+    "device": "gpu",
+    "verbose": -1,
+    "learning_rate": 0.003133555823067838,
+    "max_depth": 13,
+    "num_leaves": 74,
+    "min_child_samples": 72,
+    "min_child_weight": 0.023870970380862246,
+    "feature_fraction": 0.8646876725611532,
+    "bagging_fraction": 0.40306530325827994,
+    "bagging_freq": 1,
+    "lambda_l1": 0.0027785274261174398,
+    "lambda_l2": 0.00978752568525981
+}
