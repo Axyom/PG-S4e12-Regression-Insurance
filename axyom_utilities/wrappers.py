@@ -94,7 +94,7 @@ class CatBoostRegressorWrapper(BaseEstimator, RegressorMixin):
             X = pd.DataFrame(X)
         
         # Identify categorical columns
-        categorical_columns = X.select_dtypes(include=['object', 'category']).columns
+        categorical_columns = X.select_dtypes(include=['object', 'category', 'string']).columns
         categorical_indices = [X.columns.get_loc(col) for col in categorical_columns]
 
         # Create CatBoost Pool with categorical features

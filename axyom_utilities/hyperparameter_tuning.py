@@ -12,20 +12,21 @@ from optuna.visualization.matplotlib import (
 import matplotlib.pyplot as plt
 
 class ModelTuner:
-    def __init__(self, X_train, y_train, max_time, study_name, fixed_params=None, varying_params=None):
+    def __init__(self, X_train, y_train, max_time, study_name, best_iteration_name, fixed_params=None, varying_params=None):
         self.X_train = X_train
         self.y_train = y_train
         self.max_time = max_time
         self.study_name = study_name
         self.fixed_params = fixed_params or {}
         self.varying_params = varying_params or (lambda trial: {})
+        self.best_iteration_name = best_iteration_name
 
     def tune(self, model_generator, params_file):
         objective = lambda trial: self.generic_objective(trial, model_generator)
         best_trial = self.optuna_tuning(objective)
         
         best_params = {**self.fixed_params, **best_trial.params}
-        best_params["n_estimators"] = best_trial.user_attrs.get("best_iteration", None)
+        best_params[self.best_iteration_name] = best_trial.user_attrs.get("best_iteration", None)
 
         with open(params_file, "w") as f:
             json.dump(best_params, f, indent=4)
@@ -71,6 +72,32 @@ class ModelTuner:
         plt.show()
 
         return study.best_trial
+    
+class CatBoostTuner(ModelTuner):
+    def __init__(self, X_train, y_train, max_time, study_name="catboost", fixed_params=None, varying_params=None):
+        default_fixed_params = {
+            "iterations": 10000,
+            "task_type": "GPU",
+            "verbose": False
+        }
+        fixed_params = {**default_fixed_params, **(fixed_params or {})}
+        
+        default_varying_params = lambda trial: {
+            "learning_rate": trial.suggest_float("learning_rate", 1e-3, 0.3, log=True),
+            "depth": trial.suggest_int("depth", 4, 20),
+            "l2_leaf_reg": trial.suggest_float("l2_leaf_reg", 1e-3, 100, log=True),
+            "bagging_temperature": trial.suggest_float("bagging_temperature", 0, 4),
+            "border_count": trial.suggest_int("border_count", 32, 255),
+            "random_strength": trial.suggest_float("random_strength", 1e-3, 10, log=True),
+            "min_data_in_leaf": trial.suggest_int("min_data_in_leaf", 1, 100),
+            #"grow_policy": trial.suggest_categorical("grow_policy", ["SymmetricTree", "Depthwise", "Lossguide"])
+        }
+        varying_params = varying_params or default_varying_params
+        
+        super().__init__(X_train, y_train, max_time, study_name, "iterations", fixed_params, varying_params)
+
+    def tune(self):        
+        return super().tune(LGBMRegressorWrapper, "catboost_best_params.json")
 
 class LGBMTuner(ModelTuner):
     def __init__(self, X_train, y_train, max_time, study_name="lgbm", fixed_params=None, varying_params=None):
@@ -97,7 +124,7 @@ class LGBMTuner(ModelTuner):
         }
         varying_params = varying_params or default_varying_params
         
-        super().__init__(X_train, y_train, max_time, study_name, fixed_params, varying_params)
+        super().__init__(X_train, y_train, max_time, study_name, "n_iterators", fixed_params, varying_params)
 
     def tune(self):
         return super().tune(LGBMRegressorWrapper, "lgbm_best_params.json")
@@ -125,7 +152,7 @@ class XGBoostTuner(ModelTuner):
         }
         varying_params = varying_params or default_varying_params
         
-        super().__init__(X_train, y_train, max_time, study_name, fixed_params, varying_params)
+        super().__init__(X_train, y_train, max_time, study_name, "n_iterators", fixed_params, varying_params)
 
     def tune(self):
         return super().tune(XGBRegressorWrapper, "xgb_best_params.json")
