@@ -21,6 +21,12 @@ def clean_categorical(df):
     
     return df 
 
+def all_to_string(df): 
+    columns_to_convert = df.columns.difference(['Premium Amount'])
+    df[columns_to_convert] = df[columns_to_convert].fillna('None').astype('string')
+    
+    return df
+
 def preprocess_dates(df):
     df["Policy Start Date"] = pd.to_datetime(df["Policy Start Date"])
     df["Month"]       = df["Policy Start Date"].dt.month
@@ -39,4 +45,40 @@ def preprocess_dates(df):
 
     df = df.drop("Policy Start Date", axis=1, errors = "ignore")
 
-    return df    
+    return df  
+
+import pandas as pd
+
+def frequency_encode(train, test, drop_org=False):
+    """
+    Automatically detects categorical columns (str, category, object),
+    applies frequency encoding, and updates train and test DataFrames.
+
+    Parameters:
+        train (pd.DataFrame): Training DataFrame.
+        test (pd.DataFrame): Test DataFrame.
+        drop_org (bool): Whether to drop the original categorical columns.
+
+    Returns:
+        tuple: (train, test)
+    """
+    # Detect categorical columns
+    cat_cols = train.select_dtypes(include=['object', 'category', 'string']).columns.tolist()
+    
+    # Combine train and test to calculate frequencies
+    combined = pd.concat([train, test], axis=0, ignore_index=True)
+
+    for col in cat_cols:
+        freq_encoding = combined[col].value_counts().to_dict()
+        
+        # Apply frequency encoding
+        train[f"{col}_freq"] = train[col].map(freq_encoding).astype('float')
+        test[f"{col}_freq"] = test[col].map(freq_encoding).astype('float')
+        
+        # Drop the original column if specified
+        if drop_org:
+            train.drop(columns=[col], inplace=True)
+            test.drop(columns=[col], inplace=True)
+
+    return train, test
+  
