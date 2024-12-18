@@ -3,13 +3,14 @@ from sklearn.metrics import root_mean_squared_error
 import numpy as np
 import pandas as pd
 
-def train_model_cv(model, X_train, y_train, X_test, X_orig, y_orig=None, cv_splits=7, early_stopping_rounds=None):
+def train_model_cv(model, X_train, y_train, X_test=None, X_orig=None, y_orig=None, cv_splits=7, early_stopping_rounds=None):
     # Initialize the K-Fold for CV
     kf = KFold(n_splits=cv_splits, shuffle=True, random_state=84)
     
     # Initialize placeholders for results
     oof_preds = np.zeros(X_train.shape[0])
-    test_preds = np.zeros(X_test.shape[0])
+    if X_test is not None:
+        test_preds = np.zeros(X_test.shape[0])
     cv_scores = np.zeros(cv_splits)
     best_iterations = np.zeros(cv_splits)
     models = []
@@ -41,7 +42,9 @@ def train_model_cv(model, X_train, y_train, X_test, X_orig, y_orig=None, cv_spli
         
         # Predict on validation and test data
         oof_preds[val_idx] = model.predict(X_val_fold)
-        test_preds += model.predict(X_test)
+        
+        if X_test is not None:
+            test_preds += model.predict(X_test)
         
         # Calculate score for this fold
         fold_score = root_mean_squared_error(y_val_fold, oof_preds[val_idx])
@@ -51,16 +54,23 @@ def train_model_cv(model, X_train, y_train, X_test, X_orig, y_orig=None, cv_spli
         print(f"Fold {fold + 1} RMSE: {fold_score:.4f}")
     
     # Summary statistics
-    test_preds /= cv_splits
+    if X_test is not None:
+        test_preds /= cv_splits
+        
     mean_score = np.mean(cv_scores)
     std_score = np.std(cv_scores)
     best_iteration = best_iterations.mean()
     print(f"Mean CV RMSE: {mean_score:.4f} ± {std_score:.4f}")
-
-    return {\
+    
+    results = {
         "oof_preds": oof_preds,
-        "test_preds": test_preds,
+        #"test_preds": test_preds,
         "cv_scores": cv_scores,
         "models": models,
         "best_iteration": int(best_iterations.mean())
     }
+    
+    if X_test is not None:
+        results["test_preds"] = test_preds
+
+    return results
