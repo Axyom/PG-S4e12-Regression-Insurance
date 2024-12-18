@@ -5,5 +5,5 @@ data/
 **/AutogluonModels/
 *.pkl
 *.csv
-
+*.pyc
 
