@@ -1,6 +1,36 @@
 import numpy as np
 import pandas as pd
 
+
+def freq_encode(df, drop_org=False):
+    """
+    Detects categorical columns (str, category, object),
+    applies frequency encoding, and updates the DataFrame.
+
+    Parameters:
+        df (pd.DataFrame): Input DataFrame.
+        drop_org (bool): Whether to drop the original categorical columns.
+
+    Returns:
+        pd.DataFrame: Updated DataFrame with frequency-encoded columns.
+    """
+    # Detect categorical columns
+    cat_cols = df.select_dtypes(include=['object', 'category', 'string']).columns.tolist()
+    
+    for col in cat_cols:
+        # Calculate frequency encoding
+        freq_encoding = df[col].value_counts().to_dict()
+        
+        # Apply frequency encoding
+        df[f"{col}_freq"] = df[col].map(freq_encoding).astype('float')
+        
+        # Drop the original column if specified
+        if drop_org:
+            df.drop(columns=[col], inplace=True)
+
+    return df
+
+
 def health_score_eng(df):
     df['HealthScore'] = df['Health Score'].apply(lambda x: int(x) if pd.notna(x) else x)
     df['Health Score'] = df['Health Score'].fillna('None').astype('string')
@@ -51,38 +81,38 @@ def preprocess_dates(df):
 
     return df  
 
-import pandas as pd
 
-def frequency_encode(train, test, drop_org=False):
-    """
-    Automatically detects categorical columns (str, category, object),
-    applies frequency encoding, and updates train and test DataFrames.
 
-    Parameters:
-        train (pd.DataFrame): Training DataFrame.
-        test (pd.DataFrame): Test DataFrame.
-        drop_org (bool): Whether to drop the original categorical columns.
+# def frequency_encode(train, test, drop_org=False):
+#     """
+#     Automatically detects categorical columns (str, category, object),
+#     applies frequency encoding, and updates train and test DataFrames.
 
-    Returns:
-        tuple: (train, test)
-    """
-    # Detect categorical columns
-    cat_cols = train.select_dtypes(include=['object', 'category', 'string']).columns.tolist()
+#     Parameters:
+#         train (pd.DataFrame): Training DataFrame.
+#         test (pd.DataFrame): Test DataFrame.
+#         drop_org (bool): Whether to drop the original categorical columns.
+
+#     Returns:
+#         tuple: (train, test)
+#     """
+#     # Detect categorical columns
+#     cat_cols = train.select_dtypes(include=['object', 'category', 'string']).columns.tolist()
     
-    # Combine train and test to calculate frequencies
-    combined = pd.concat([train, test], axis=0, ignore_index=True)
+#     # Combine train and test to calculate frequencies
+#     combined = pd.concat([train, test], axis=0, ignore_index=True)
 
-    for col in cat_cols:
-        freq_encoding = combined[col].value_counts().to_dict()
+#     for col in cat_cols:
+#         freq_encoding = combined[col].value_counts().to_dict()
         
-        # Apply frequency encoding
-        train[f"{col}_freq"] = train[col].map(freq_encoding).astype('float')
-        test[f"{col}_freq"] = test[col].map(freq_encoding).astype('float')
+#         # Apply frequency encoding
+#         train[f"{col}_freq"] = train[col].map(freq_encoding).astype('float')
+#         test[f"{col}_freq"] = test[col].map(freq_encoding).astype('float')
         
-        # Drop the original column if specified
-        if drop_org:
-            train.drop(columns=[col], inplace=True)
-            test.drop(columns=[col], inplace=True)
+#         # Drop the original column if specified
+#         if drop_org:
+#             train.drop(columns=[col], inplace=True)
+#             test.drop(columns=[col], inplace=True)
 
-    return train, test
+#     return train, test
   
