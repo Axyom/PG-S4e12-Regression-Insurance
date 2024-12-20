@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 
-def freq_encode(df, drop_org=False):
+def freq_encode(df, col, drop_org=False):
     """
     Detects categorical columns (str, category, object),
     applies frequency encoding, and updates the DataFrame.
@@ -15,18 +15,18 @@ def freq_encode(df, drop_org=False):
         pd.DataFrame: Updated DataFrame with frequency-encoded columns.
     """
     # Detect categorical columns
-    cat_cols = df.select_dtypes(include=['object', 'category', 'string']).columns.tolist()
+    # cat_cols = df.select_dtypes(include=['object', 'category', 'string']).columns.tolist()
     
-    for col in cat_cols:
+    # for col in cat_cols:
         # Calculate frequency encoding
-        freq_encoding = df[col].value_counts().to_dict()
-        
-        # Apply frequency encoding
-        df[f"{col}_freq"] = df[col].map(freq_encoding).astype('float')
-        
-        # Drop the original column if specified
-        if drop_org:
-            df.drop(columns=[col], inplace=True)
+    freq_encoding = df[col].value_counts().to_dict()
+    
+    # Apply frequency encoding
+    df[f"{col}_freq"] = df[col].map(freq_encoding).astype('float')
+    
+    # Drop the original column if specified
+    if drop_org:
+        df.drop(columns=[col], inplace=True)
 
     return df
 
