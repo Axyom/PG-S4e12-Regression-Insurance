@@ -51,7 +51,8 @@ class ModelTuner:
         return score
     
     def plot(self):
-        self.study = optuna.load_study(study_name=self.study_name, storage=self.storage)
+        if self.study is None:
+            self.study = optuna.load_study(study_name=self.study_name, storage=self.storage)
         
         plot_optimization_history(self.study)
         plt.show()
@@ -75,7 +76,7 @@ class ModelTuner:
         print("Best Trial: ", self.study.best_trial.params)
         print("Best Score: ", self.study.best_value)
 
-        self.plot()
+        #self.plot()
 
         return self.study.best_trial
     

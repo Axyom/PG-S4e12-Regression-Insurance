@@ -2,8 +2,9 @@ from sklearn.model_selection import KFold
 from sklearn.metrics import root_mean_squared_error
 import numpy as np
 import pandas as pd
+import optuna
 
-def train_model_cv(model, X_train, y_train, X_test=None, X_orig=None, y_orig=None, cv_splits=7, early_stopping_rounds=None):
+def train_model_cv(model, X_train, y_train, X_test=None, X_orig=None, y_orig=None, cv_splits=7, early_stopping_rounds=None, trial=None):
     # Initialize the K-Fold for CV
     kf = KFold(n_splits=cv_splits, shuffle=True, random_state=84)
     
@@ -48,6 +49,12 @@ def train_model_cv(model, X_train, y_train, X_test=None, X_orig=None, y_orig=Non
         
         # Calculate score for this fold
         fold_score = root_mean_squared_error(y_val_fold, oof_preds[val_idx])
+        
+        if trial is not None:
+            trial.report(fold_score, fold)
+            if trial.should_prune():
+                raise optuna.exceptions.TrialPruned()
+        
         cv_scores[fold] = fold_score
         models.append(model)
         
