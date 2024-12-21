@@ -4,6 +4,7 @@ from axyom_utilities.training import train_model_cv
 import optuna
 import torch
 from optuna.samplers import TPESampler
+from optuna.pruners import MedianPruner
 from optuna.visualization.matplotlib import (
     plot_optimization_history, 
     plot_param_importances, 
@@ -43,7 +44,8 @@ class ModelTuner:
             self.X_train, 
             self.y_train, 
             cv_splits=5, 
-            early_stopping_rounds=100
+            early_stopping_rounds=100,
+            trial=trial
         )
         
         score = results['cv_scores'].mean()
@@ -69,7 +71,8 @@ class ModelTuner:
             study_name=self.study_name, 
             storage=self.storage, 
             load_if_exists=True,
-            sampler=TPESampler(seed=666)
+            sampler=TPESampler(seed=666),
+            pruner=MedianPruner(n_startup_trials=10, n_warmup_steps=0)
         )
         self.study.optimize(objective, n_trials=10000, timeout=self.max_time)
 
