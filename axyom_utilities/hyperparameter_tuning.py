@@ -1,5 +1,5 @@
 import json
-from axyom_utilities.wrappers import XGBRegressorWrapper, LGBMRegressorWrapper
+from axyom_utilities.wrappers import XGBRegressorWrapper, LGBMRegressorWrapper, CatBoostRegressorWrapper
 from axyom_utilities.training import train_model_cv
 import optuna
 import torch
@@ -84,7 +84,7 @@ class CatBoostTuner(ModelTuner):
         
         default_varying_params = lambda trial: {
             "learning_rate": trial.suggest_float("learning_rate", 1e-3, 0.3, log=True),
-            "depth": trial.suggest_int("depth", 4, 20),
+            "depth": trial.suggest_int("depth", 4, 16),
             "l2_leaf_reg": trial.suggest_float("l2_leaf_reg", 1e-3, 100, log=True),
             "bagging_temperature": trial.suggest_float("bagging_temperature", 0, 4),
             "border_count": trial.suggest_int("border_count", 32, 255),
@@ -97,7 +97,7 @@ class CatBoostTuner(ModelTuner):
         super().__init__(X_train, y_train, max_time, study_name, "iterations", fixed_params, varying_params)
 
     def tune(self):        
-        return super().tune(LGBMRegressorWrapper, "catboost_best_params.json")
+        return super().tune(CatBoostRegressorWrapper, "catboost_best_params.json")
 
 class LGBMTuner(ModelTuner):
     def __init__(self, X_train, y_train, max_time, study_name="lgbm", fixed_params=None, varying_params=None):

@@ -83,36 +83,36 @@ def preprocess_dates(df):
 
 
 
-# def frequency_encode(train, test, drop_org=False):
-#     """
-#     Automatically detects categorical columns (str, category, object),
-#     applies frequency encoding, and updates train and test DataFrames.
+def frequency_encode(train, test, drop_org=False):
+    """
+    Automatically detects categorical columns (str, category, object),
+    applies frequency encoding, and updates train and test DataFrames.
 
-#     Parameters:
-#         train (pd.DataFrame): Training DataFrame.
-#         test (pd.DataFrame): Test DataFrame.
-#         drop_org (bool): Whether to drop the original categorical columns.
+    Parameters:
+        train (pd.DataFrame): Training DataFrame.
+        test (pd.DataFrame): Test DataFrame.
+        drop_org (bool): Whether to drop the original categorical columns.
 
-#     Returns:
-#         tuple: (train, test)
-#     """
-#     # Detect categorical columns
-#     cat_cols = train.select_dtypes(include=['object', 'category', 'string']).columns.tolist()
+    Returns:
+        tuple: (train, test)
+    """
+    # Detect categorical columns
+    cat_cols = train.select_dtypes(include=['object', 'category', 'string']).columns.tolist()
     
-#     # Combine train and test to calculate frequencies
-#     combined = pd.concat([train, test], axis=0, ignore_index=True)
+    # Combine train and test to calculate frequencies
+    combined = pd.concat([train, test], axis=0, ignore_index=True)
 
-#     for col in cat_cols:
-#         freq_encoding = combined[col].value_counts().to_dict()
+    for col in cat_cols:
+        freq_encoding = combined[col].value_counts().to_dict()
         
-#         # Apply frequency encoding
-#         train[f"{col}_freq"] = train[col].map(freq_encoding).astype('float')
-#         test[f"{col}_freq"] = test[col].map(freq_encoding).astype('float')
+        # Apply frequency encoding
+        train[f"{col}_freq"] = train[col].map(freq_encoding).astype('float')
+        test[f"{col}_freq"] = test[col].map(freq_encoding).astype('float')
         
-#         # Drop the original column if specified
-#         if drop_org:
-#             train.drop(columns=[col], inplace=True)
-#             test.drop(columns=[col], inplace=True)
+        # Drop the original column if specified
+        if drop_org:
+            train.drop(columns=[col], inplace=True)
+            test.drop(columns=[col], inplace=True)
 
-#     return train, test
+    return train, test
   

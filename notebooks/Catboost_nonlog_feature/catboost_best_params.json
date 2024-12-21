@@ -1,0 +1,12 @@
+{
+    "iterations": 5883,
+    "task_type": "GPU",
+    "verbose": false,
+    "learning_rate": 0.00521765446243734,
+    "depth": 11,
+    "l2_leaf_reg": 0.020973837119135495,
+    "bagging_temperature": 0.12952601761069596,
+    "border_count": 136,
+    "random_strength": 6.979958130250014,
+    "min_data_in_leaf": 1
+}
