@@ -20,6 +20,7 @@ class ModelTuner:
         self.fixed_params = fixed_params or {}
         self.varying_params = varying_params or (lambda trial: {})
         self.best_iteration_name = best_iteration_name
+        self.storage = "sqlite:///study.db"
 
     def tune(self, model_generator, params_file):
         objective = lambda trial: self.generic_objective(trial, model_generator)
@@ -48,30 +49,35 @@ class ModelTuner:
         score = results['cv_scores'].mean()
         trial.set_user_attr("best_iteration", results['best_iteration'])
         return score
+    
+    def plot(self):
+        self.study = optuna.load_study(study_name=self.study_name, storage=self.storage)
+        
+        plot_optimization_history(self.study)
+        plt.show()
+
+        plot_param_importances(self.study)
+        plt.show()
+
+        plot_slice(self.study)
+        plt.show()       
 
     def optuna_tuning(self, objective):
-        study = optuna.create_study(
+        self.study = optuna.create_study(
             direction="minimize", 
             study_name=self.study_name, 
-            storage="sqlite:///study.db", 
+            storage=self.storage, 
             load_if_exists=True,
             sampler=TPESampler(seed=666)
         )
-        study.optimize(objective, n_trials=10000, timeout=self.max_time)
+        self.study.optimize(objective, n_trials=10000, timeout=self.max_time)
 
-        print("Best Trial: ", study.best_trial.params)
-        print("Best Score: ", study.best_value)
+        print("Best Trial: ", self.study.best_trial.params)
+        print("Best Score: ", self.study.best_value)
 
-        plot_optimization_history(study)
-        plt.show()
+        self.plot()
 
-        plot_param_importances(study)
-        plt.show()
-
-        plot_slice(study)
-        plt.show()
-
-        return study.best_trial
+        return self.study.best_trial
     
 class CatBoostTuner(ModelTuner):
     def __init__(self, X_train, y_train, max_time, study_name="catboost", fixed_params=None, varying_params=None):
