@@ -116,7 +116,8 @@ class LGBMTuner(ModelTuner):
             "objective": "regression",
             "metric": "rmse",  # Use RMSE as the evaluation metric
             "device": "gpu",
-            "verbose": -1
+            "verbose": -1,
+            "max_bin": 255,  # Reduce to fit GPU requirements
         }
         fixed_params = {**default_fixed_params, **(fixed_params or {})}
         
