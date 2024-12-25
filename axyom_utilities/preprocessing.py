@@ -81,6 +81,24 @@ def preprocess_dates(df):
 
     return df  
 
+def reduce_memory_usage(df):
+    for col in df.columns:
+        col_type = df[col].dtype
+        if not pd.api.types.is_categorical_dtype(col_type):
+            c_min = df[col].min()
+            c_max = df[col].max()
+            if str(col_type)[:3] == 'int':
+                if c_min > np.iinfo(np.int8).min and c_max < np.iinfo(np.int8).max:
+                    df[col] = df[col].astype(np.int8)
+                elif c_min > np.iinfo(np.int16).min and c_max < np.iinfo(np.int16).max:
+                    df[col] = df[col].astype(np.int16)
+                elif c_min > np.iinfo(np.int32).min and c_max < np.iinfo(np.int32).max:
+                    df[col] = df[col].astype(np.int32)
+            elif str(col_type)[:5] == 'float':
+                # Avoid downcasting floats to float16
+                if c_min > np.finfo(np.float32).min and c_max < np.finfo(np.float32).max:
+                    df[col] = df[col].astype(np.float32)
+    return df
 
 
 def frequency_encode(train, test, drop_org=False):
