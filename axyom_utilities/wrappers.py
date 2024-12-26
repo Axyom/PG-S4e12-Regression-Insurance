@@ -7,6 +7,85 @@ from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.base import BaseEstimator, RegressorMixin
 import pandas as pd
 
+import ydf  # Yggdrasil Decision Forests
+from sklearn.base import BaseEstimator, RegressorMixin
+import pandas as pd
+
+class YggdrasilRegressorWrapper(BaseEstimator, RegressorMixin):
+    def __init__(self, **kwargs):
+        """
+        Wrapper for Yggdrasil Decision Forests Regressor.
+
+        Parameters:
+        - kwargs: Additional parameters for the Yggdrasil model.
+        """
+        self.params = kwargs
+
+    def fit(self, X, y, eval_set=None):
+        """
+        Train the Yggdrasil Regressor model.
+
+        Parameters:
+        - X: pd.DataFrame or array-like
+          Training features.
+        - y: array-like
+          Training labels.
+        - eval_set: tuple or None
+          Optional validation set for evaluation, in the form (X_val, y_val).
+        """
+        # Ensure X is a DataFrame
+        if not isinstance(X, pd.DataFrame):
+            X = pd.DataFrame(X)
+
+        # Combine X and y into a single DataFrame
+        train_data = X.copy()
+        train_data['target'] = y
+
+        # Initialize and train the Yggdrasil model
+        self.yggdrasil_model_ = ydf.GradientBoostedTreesLearner(label="target", **self.params)
+        self.yggdrasil_model_.train(train_data)
+
+        return self
+
+    def predict(self, X):
+        """
+        Make predictions using the trained model.
+
+        Parameters:
+        - X: pd.DataFrame or array-like
+          Features to predict on.
+
+        Returns:
+        - array-like: Predicted values.
+        """
+        if not isinstance(X, pd.DataFrame):
+            X = pd.DataFrame(X)
+        return self.yggdrasil_model_.predict(X)
+
+    def get_params(self, deep=True):
+        """
+        Get parameters of the Yggdrasil model.
+
+        Returns:
+        - dict: Model parameters.
+        """
+        return self.params
+
+    def set_params(self, **parameters):
+        """
+        Set parameters for the Yggdrasil model.
+
+        Parameters:
+        - parameters: dict
+          Parameters to update.
+
+        Returns:
+        - self
+        """
+        self.params.update(parameters)
+        return self
+
+
 class HGBMRegressorWrapper(BaseEstimator, RegressorMixin):
     def __init__(self, **kwargs):
         """

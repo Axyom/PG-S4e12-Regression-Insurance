@@ -1,5 +1,5 @@
 import json
-from axyom_utilities.wrappers import XGBRegressorWrapper, LGBMRegressorWrapper, CatBoostRegressorWrapper, HGBMRegressorWrapper
+from axyom_utilities.wrappers import XGBRegressorWrapper, LGBMRegressorWrapper, CatBoostRegressorWrapper, HGBMRegressorWrapper, YggdrasilRegressorWrapper
 from axyom_utilities.training import train_model_cv
 import optuna
 import torch
@@ -143,7 +143,7 @@ class LGBMTuner(ModelTuner):
 class XGBoostTuner(ModelTuner):
     def __init__(self, X_train, y_train, max_time, study_name="xgboost", fixed_params=None, varying_params=None):
         default_fixed_params = {
-            "n_estimators": 10000,
+            "n_estimators": 5000,
             "objective": "reg:squarederror",
             "tree_method": "gpu_hist" if torch.cuda.is_available() else "auto",
             "verbosity": 0,
@@ -153,7 +153,7 @@ class XGBoostTuner(ModelTuner):
         
         default_varying_params = lambda trial: {
             "learning_rate": trial.suggest_float("learning_rate", 1e-3, 0.3, log=True),
-            "max_depth": trial.suggest_int("max_depth", 8, 15),
+            "max_depth": trial.suggest_int("max_depth", 8, 12),
             "min_child_weight": trial.suggest_float("min_child_weight", 1e-3, 50, log=True),
             "subsample": trial.suggest_float("subsample", 0.4, 1.0),
             "colsample_bytree": trial.suggest_float("colsample_bytree", 0.4, 1.0),
@@ -190,3 +190,27 @@ class HGBMTuner(ModelTuner):
 
     def tune(self):
         return super().tune(HGBMRegressorWrapper, "hgbm_best_params.json")
+    
+class YggdrasilTuner(ModelTuner):
+    def __init__(self, X_train, y_train, max_time, study_name="yggdrasil", fixed_params=None, varying_params=None):
+        default_fixed_params = {
+            "num_trees": 1000,
+            "task": "REGRESSION",  # Task type
+            "verbose": 0
+        }
+        fixed_params = {**default_fixed_params, **(fixed_params or {})}
+
+        default_varying_params = lambda trial: {
+            "learning_rate": trial.suggest_float("learning_rate", 1e-3, 0.3, log=True),
+            "max_depth": trial.suggest_int("max_depth", 5, 20),
+            "min_examples": trial.suggest_int("min_examples", 5, 100),
+            "l2_regularization": trial.suggest_float("l2_regularization", 1e-3, 10, log=True),
+            "shrinkage": trial.suggest_float("shrinkage", 0.1, 1.0)
+        }
+        varying_params = varying_params or default_varying_params
+
+        super().__init__(X_train, y_train, max_time, study_name, "num_trees", fixed_params, varying_params)
+
+    def tune(self):
+        return super().tune(YggdrasilRegressorWrapper, "yggdrasil_best_params.json")
+
