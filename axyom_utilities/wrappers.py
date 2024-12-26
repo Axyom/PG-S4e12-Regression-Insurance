@@ -3,6 +3,96 @@ from sklearn.base import BaseEstimator, RegressorMixin
 import pandas as pd
 from catboost import CatBoostRegressor, Pool
 
+from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.base import BaseEstimator, RegressorMixin
+import pandas as pd
+
+class HGBMRegressorWrapper(BaseEstimator, RegressorMixin):
+    def __init__(self, **kwargs):
+        """
+        Parameters:
+        - kwargs: Additional parameters for HistGradientBoostingRegressor.
+        """
+        self.params = kwargs
+
+    def fit(self, X, y, eval_set=None, early_stopping_rounds=None, verbose=False):
+        """
+        Train the HistGradientBoostingRegressor model.
+
+        Parameters:
+        - X: pd.DataFrame or array-like
+          Training features.
+        - y: array-like
+          Training labels.
+        - eval_set: tuple or None
+          Optional validation set for early stopping, in the form (X_val, y_val).
+        - early_stopping_rounds: int or None
+          Number of rounds for early stopping. Set to None to disable.
+        - verbose: bool
+          Whether to print training progress.
+        """
+        # Ensure X is a DataFrame
+        if not isinstance(X, pd.DataFrame):
+            X = pd.DataFrame(X)
+        
+        # Prepare validation data
+        self.params['early_stopping'] = early_stopping_rounds is not None
+        self.params['validation_fraction'] = 0.1 if eval_set else None
+        self.params['n_iter_no_change'] = early_stopping_rounds
+
+        if eval_set:
+            X_val, y_val = eval_set
+            self.params['validation_fraction'] = len(y_val) / (len(y) + len(y_val))
+
+        # Initialize and train the HGBM Regressor
+        self.hgbm_model_ = HistGradientBoostingRegressor(**self.params)
+        self.hgbm_model_.fit(X, y)
+
+        return self
+
+    def predict(self, X):
+        """
+        Make predictions using the trained model.
+
+        Parameters:
+        - X: pd.DataFrame or array-like
+          Features to predict on.
+
+        Returns:
+        - array-like: Predicted values.
+        """
+        return self.hgbm_model_.predict(X)
+
+    def get_best_iteration(self):
+        """
+        HistGradientBoostingRegressor does not directly provide best iteration.
+        """
+        return None
+
+    def get_params(self, deep=True):
+        """
+        Get parameters of the HGBM model.
+
+        Returns:
+        - dict: Model parameters.
+        """
+        return self.params
+
+    def set_params(self, **parameters):
+        """
+        Set parameters for the HGBM model.
+
+        Parameters:
+        - parameters: dict
+          Parameters to update.
+
+        Returns:
+        - self
+        """
+        self.params.update(parameters)
+        return self
+
+
 class XGBRegressorWrapper(BaseEstimator, RegressorMixin):
     def __init__(self, **kwargs):
         self.params = kwargs

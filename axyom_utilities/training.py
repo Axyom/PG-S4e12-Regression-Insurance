@@ -42,7 +42,7 @@ def train_model_cv(model, X_train, y_train, X_test=None, X_orig=None, y_orig=Non
             model.fit(X_train_fold, y_train_fold)
         
         # Predict on validation and test data
-        oof_preds[val_idx] = model.predict(X_val_fold)
+        oof_preds[val_idx] = model.predict(X_val_fold).ravel()
         
         if X_test is not None:
             test_preds += model.predict(X_test)

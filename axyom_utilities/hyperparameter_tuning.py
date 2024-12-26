@@ -1,5 +1,5 @@
 import json
-from axyom_utilities.wrappers import XGBRegressorWrapper, LGBMRegressorWrapper, CatBoostRegressorWrapper
+from axyom_utilities.wrappers import XGBRegressorWrapper, LGBMRegressorWrapper, CatBoostRegressorWrapper, HGBMRegressorWrapper
 from axyom_utilities.training import train_model_cv
 import optuna
 import torch
@@ -167,3 +167,26 @@ class XGBoostTuner(ModelTuner):
 
     def tune(self):
         return super().tune(XGBRegressorWrapper, "xgb_best_params.json")
+
+class HGBMTuner(ModelTuner):
+    def __init__(self, X_train, y_train, max_time, study_name="hgbm", fixed_params=None, varying_params=None):
+        default_fixed_params = {
+            "max_iter": 10000,
+            "loss": "squared_error",  # Default loss for regression
+            "verbose": 0
+        }
+        fixed_params = {**default_fixed_params, **(fixed_params or {})}
+        
+        default_varying_params = lambda trial: {
+            "learning_rate": trial.suggest_float("learning_rate", 1e-3, 0.3, log=True),
+            "max_depth": trial.suggest_int("max_depth", 5, 20),
+            "min_samples_leaf": trial.suggest_int("min_samples_leaf", 5, 50),
+            "l2_regularization": trial.suggest_float("l2_regularization", 1e-3, 10, log=True),
+            "max_bins": trial.suggest_int("max_bins", 128, 255)
+        }
+        varying_params = varying_params or default_varying_params
+        
+        super().__init__(X_train, y_train, max_time, study_name, "max_iter", fixed_params, varying_params)
+
+    def tune(self):
+        return super().tune(HGBMRegressorWrapper, "hgbm_best_params.json")
