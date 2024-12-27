@@ -1,0 +1,16 @@
+{
+    "n_estimators": 4000,
+    "objective": "reg:squarederror",
+    "tree_method": "gpu_hist",
+    "verbosity": 0,
+    "enable_categorical": true,
+    "learning_rate": 0.0018074015405110902,
+    "max_depth": 10,
+    "min_child_weight": 35.82538209022429,
+    "subsample": 0.8430826729425029,
+    "colsample_bytree": 0.8317303646698226,
+    "gamma": 4.465216932504686,
+    "lambda": 7.090856965711639,
+    "alpha": 0.00614046006689163,
+    "n_iterators": 10000
+}
