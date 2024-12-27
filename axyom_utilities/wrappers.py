@@ -5,11 +5,36 @@ from catboost import CatBoostRegressor, Pool
 
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.base import BaseEstimator, RegressorMixin
-import pandas as pd
 
 import ydf  # Yggdrasil Decision Forests
-from sklearn.base import BaseEstimator, RegressorMixin
-import pandas as pd
+from sklearn.linear_model import Ridge
+
+class RidgeRegressorWrapper(BaseEstimator, RegressorMixin):
+    def __init__(self, **kwargs):
+        self.params = kwargs
+
+    def fit(self, X, y, eval_set=None, early_stopping_rounds=None, verbose=False):
+        if not isinstance(X, pd.DataFrame):
+            X = pd.DataFrame(X)
+        self.ridge_model_ = Ridge(**self.params)
+        self.ridge_model_.fit(X, y)
+        return self
+
+    def predict(self, X):
+        if not isinstance(X, pd.DataFrame):
+            X = pd.DataFrame(X)
+        return self.ridge_model_.predict(X)
+
+    def get_best_iteration(self):
+        return None
+
+    def get_params(self, deep=True):
+        return self.params
+
+    def set_params(self, **parameters):
+        self.params.update(parameters)
+        return self
+
 
 class YggdrasilRegressorWrapper(BaseEstimator, RegressorMixin):
     def __init__(self, **kwargs):

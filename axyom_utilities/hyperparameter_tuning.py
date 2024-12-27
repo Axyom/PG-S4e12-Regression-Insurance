@@ -1,5 +1,6 @@
 import json
-from axyom_utilities.wrappers import XGBRegressorWrapper, LGBMRegressorWrapper, CatBoostRegressorWrapper, HGBMRegressorWrapper, YggdrasilRegressorWrapper
+from axyom_utilities.wrappers import \
+    XGBRegressorWrapper, LGBMRegressorWrapper, CatBoostRegressorWrapper, HGBMRegressorWrapper, YggdrasilRegressorWrapper, RidgeRegressorWrapper
 from axyom_utilities.training import train_model_cv
 import optuna
 import torch
@@ -213,4 +214,22 @@ class YggdrasilTuner(ModelTuner):
 
     def tune(self):
         return super().tune(YggdrasilRegressorWrapper, "yggdrasil_best_params.json")
+
+class RidgeTuner(ModelTuner):
+    def __init__(self, X_train, y_train, max_time, study_name="ridge", fixed_params=None, varying_params=None):
+        default_fixed_params = {}
+        fixed_params = {**default_fixed_params, **(fixed_params or {})}
+        
+        default_varying_params = lambda trial: {
+            "alpha": trial.suggest_float("alpha", 1e-3, 10, log=True),
+            "solver": trial.suggest_categorical("solver", ["auto", "svd", "cholesky", "lsqr", "sparse_cg", "sag", "saga", "lbfgs"]),
+            "fit_intercept": trial.suggest_categorical("fit_intercept", [True, False]),
+            "tol": trial.suggest_float("tol", 1e-6, 1e-2, log=True),
+        }
+        varying_params = varying_params or default_varying_params
+
+        super().__init__(X_train, y_train, max_time, study_name, "max_iter", fixed_params, varying_params)
+
+    def tune(self):
+        return super().tune(RidgeRegressorWrapper, "ridge_best_params.json")
 
