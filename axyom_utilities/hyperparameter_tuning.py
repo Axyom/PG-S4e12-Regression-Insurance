@@ -143,7 +143,7 @@ class LGBMTuner(ModelTuner):
 class XGBoostTuner(ModelTuner):
     def __init__(self, X_train, y_train, max_time, study_name="xgboost", fixed_params=None, varying_params=None):
         default_fixed_params = {
-            "n_estimators": 5000,
+            "n_estimators": 4000,
             "objective": "reg:squarederror",
             "tree_method": "gpu_hist" if torch.cuda.is_available() else "auto",
             "verbosity": 0,
@@ -153,7 +153,7 @@ class XGBoostTuner(ModelTuner):
         
         default_varying_params = lambda trial: {
             "learning_rate": trial.suggest_float("learning_rate", 1e-3, 0.3, log=True),
-            "max_depth": trial.suggest_int("max_depth", 8, 12),
+            "max_depth": trial.suggest_int("max_depth", 6, 14),
             "min_child_weight": trial.suggest_float("min_child_weight", 1e-3, 50, log=True),
             "subsample": trial.suggest_float("subsample", 0.4, 1.0),
             "colsample_bytree": trial.suggest_float("colsample_bytree", 0.4, 1.0),
